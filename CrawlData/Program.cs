@@ -1,33 +1,25 @@
 ﻿using Microsoft.Extensions.Configuration;
 using PuppeteerSharp;
 
-await CrawDataHandle();
+// const string ENVIRONMENT = "production";
+const string ENVIRONMENT = "development";
 
-static async Task CrawDataHandle()
+var builder = new ConfigurationBuilder();
+
+if (ENVIRONMENT == "development")
 {
-    const string path = "/";
-    const string domain = ".facebook.com";
-    var expires = DateTime.Parse("2024-10-04T08:00:41.551Z").Subtract(new DateTime(1970, 1, 1)).TotalMicroseconds;
+    builder.SetBasePath(Environment.CurrentDirectory);
+}
 
-    #region for development
-    // var configuration = new ConfigurationBuilder()
-    //     .SetBasePath(Environment.CurrentDirectory)
-    //     .AddJsonFile("appsettings.json")
-    //     .Build();
-    // using var browserFetcher = new BrowserFetcher();
-    // if (!browserFetcher.GetInstalledBrowsers().Any())
-    // {
-    //     await browserFetcher.DownloadAsync();
-    // }
-    // await browserFetcher.DownloadAsync();
-    #endregion
-
-    #region  for Docker
-    var configuration = new ConfigurationBuilder()
+var configuration = builder
     .AddJsonFile("appsettings.json")
     .Build();
-    #endregion
 
+await CrawDataHandle(configuration);
+
+static async Task CrawDataHandle(IConfigurationRoot configuration)
+{
+    var expires = DateTime.Parse(configuration.GetSection("AppSettings:Expires").Value!).Subtract(new DateTime(1970, 1, 1)).TotalMicroseconds;
 
     var browser = await Puppeteer.LaunchAsync(new LaunchOptions
     {
@@ -42,9 +34,9 @@ static async Task CrawDataHandle()
          new CookieParam
          {
              Name = "xs",
-             Value = "38%3ArNxproaxhqZNpw%3A2%3A1696492853%3A-1%3A-1",
-             Domain = domain,
-             Path = path,
+             Value = configuration.GetSection("AppSettings:Xs").Value!,
+             Domain = configuration.GetSection("AppSettings:Domain").Value!,
+             Path = configuration.GetSection("AppSettings:Path").Value!,
              Expires = expires,
              HttpOnly = true,
              Secure = true
@@ -52,9 +44,9 @@ static async Task CrawDataHandle()
          new CookieParam
          {
              Name = "c_user",
-             Value = "61551762699177",
-             Domain = domain,
-             Path = path,
+             Value = configuration.GetSection("AppSettings:CUser").Value!,
+             Domain = configuration.GetSection("AppSettings:Domain").Value!,
+             Path = configuration.GetSection("AppSettings:Path").Value!,
              Expires = expires,
              HttpOnly = false,
              Secure = true
@@ -75,9 +67,8 @@ static async Task CrawDataHandle()
 
         if (uniqueNewHrefs.Count == 0)
         {
-            await Console.Out.WriteLineAsync("end");
+            await Console.Out.WriteLineAsync("ended");
             break;
-
         }
         hrefs.AddRange(uniqueNewHrefs);
     }
@@ -89,10 +80,10 @@ static async Task CrawDataHandle()
 
 static async Task<List<string>> ScrollAndGetHrefs(IPage page)
 {
+    await page.WaitForTimeoutAsync(5000);
     await page.EvaluateFunctionAsync(@"() => {
         window.scrollTo(0, document.body.scrollHeight);
     }");
-    await page.WaitForTimeoutAsync(1500);
     var hrefs = await page.EvaluateFunctionAsync<List<string>>(@"
         () => {
             const anchors = document.querySelectorAll('span.xt0psk2 > a');
