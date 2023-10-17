@@ -18,10 +18,6 @@ RUN wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/
     && apt-get install -y /tmp/chrome.deb --no-install-recommends --allow-downgrades fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf \
     && rm /tmp/chrome.deb
 
-# create system group 'pptruser'
-# create system user 'pptruser' in group 'audio', 'video' and 'pptruser'
-# make dir 'Downloads' in folder '/home/pptruser'
-# set onwner '/home/pptruser'
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
     && mkdir -p /home/pptruser/Downloads \
     && chown -R pptruser:pptruser /home/pptruser

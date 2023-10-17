@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using PuppeteerSharp;
 
-// const string ENVIRONMENT = "production";
+// const string ENVIRONMENT = "docker";
 const string ENVIRONMENT = "development";
 
 var builder = new ConfigurationBuilder();
